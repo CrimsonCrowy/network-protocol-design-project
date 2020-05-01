@@ -1,11 +1,13 @@
+import hashlib
 from Classes.Graph import Graph
-from Classes.Sequencer import Sequencer
+from Classes.Segmenter import Segmenter
 
 class Packet():
     SEPARATOR = '|'
     def __init__(self, packetRaw):
         self.raw = packetRaw
         self.isValid = False
+        # print(self.__validateChecksum())
         
         try:
             splitted = list(reversed(packetRaw.split(self.SEPARATOR)))
@@ -18,11 +20,11 @@ class Packet():
             segment = splitted.pop().split("/")
             self.segmentNumber = segment[0]
             self.sequenceLength = segment[1]
-            if self.segmentationType != Sequencer.ACK:
+            if self.segmentationType != Segmenter.ACK:
                 self.checksum = splitted.pop()
                 self.packetType = splitted.pop()
                 self.payload = self.SEPARATOR.join(reversed(splitted))
-                if self.hopCount > 0 and __validateChecksum():
+                if self.hopCount > 0 and self.__validateChecksum():
                     self.isValid = True
             elif self.hopCount > 0:
                 self.isValid = True
@@ -32,10 +34,10 @@ class Packet():
     def isValid(self):
         return self.isValid
 
-    def __validateChecksum():
+    def __validateChecksum(self):
         #TODO: implement
         #return md5(self.payload) == self.checksum (or something else)
-        return True
+        return hashlib.md5(self.payload.encode()).hexdigest() == self.checksum
 
     def getACK(self):
         if not self.isValid:

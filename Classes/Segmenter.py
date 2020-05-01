@@ -1,11 +1,15 @@
 from Classes.Graph import Graph
 from Classes.Router import Router
 
-class Sequencer():
+class Segmenter():
     ACK = 'ACK'
     SEGMENT = 'SEGMENT'
-    def __init__(self, localNodeName):
-        self.nodeName = localNodeName 
+
+    def setMain(self, main):
+        self.main = main
+
+    def __init__(self):
+        # self.nodeName = localNodeName 
         self.server = None
         self.graph = None
         self.seqs = {}
@@ -33,7 +37,7 @@ class Sequencer():
             self.server.sendPacket(packet, nextHop)
 
     def _destinationReached(self, packet):
-        return return self.nodeName == packet.dstNode
+        return self.nodeName == packet.dstNode
 
     def _handleReceivedPacket(self, packet):
         if not packet.srcNode in self.seqs:

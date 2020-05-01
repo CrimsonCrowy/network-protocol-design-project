@@ -2,8 +2,12 @@ from Classes.Graph import Graph
 
 class Router():
     BROADCAST = 'BROADCAST'
-    def __init__(self, localNodeName):
-        self.nodeName = localNodeName 
+
+    def setMain(self, main):
+        self.main = main
+
+    def __init__(self):
+        # self.nodeName = localNodeName 
         self.nodesState = {}
         self.localState = {
             'v': 0, # version 
@@ -20,7 +24,7 @@ class Router():
     def _saveNodeState(self, nodeAddress, nodeState):
         self.nodesState[nodeAddress] = nodeState
 
-    def _regenerateTopologyGraph(self):
+    def __regenerateTopologyGraph(self):
         graph = {}
         graphArguments = []
         for originNodeAddress, neighbours in self.nodesState.items():
@@ -76,7 +80,7 @@ class Router():
         if nodeState and self.nodeStateShouldBeUpdated(nodeState):
             self._saveNodeState(nodeState)
             self._floodUpdatePacket(packet)
-            self._regenerateTopologyGraph()
+            self.__regenerateTopologyGraph()
 
         
 
