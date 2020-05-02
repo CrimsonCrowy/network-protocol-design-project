@@ -33,7 +33,8 @@ def start():
         msgFromClient = str(input("Please enter a message to the server: "))
         if msgFromClient == 'exit':
             return
-        server.sendMsg(msgFromClient, "127.0.0.1", port, "Echo")
+        main.sendPayload('MESSAGE|' + msgFromClient, 'STAS', 'CHAT')
+        # server.sendMsg(msgFromClient, "127.0.0.1", port)
 
 
 

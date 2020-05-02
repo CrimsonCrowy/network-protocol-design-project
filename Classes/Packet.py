@@ -36,19 +36,24 @@ class Packet():
     def isValid(self):
         if not 'payload' in self.parts or not 'checksum' in self.parts or not 'hopCount' in self.parts:
             return False
-        return hashlib.md5(self.parts['payload'].encode()).hexdigest() == self.parts['checksum']
+        return self.generateMd5(self.parts['payload']) == self.parts['checksum']
 
-    def __validateChecksum(self):
-        if not 'payload' in self.parts or not 'checksum' in self.parts or not 'hopCount' in self.parts:
-            return False
-        #TODO: implement
-        #return md5(self.payload) == self.checksum (or something else)
-        return self.parts['hopCount'] > 0 and hashlib.md5(self.parts['payload'].encode()).hexdigest() == self.parts['checksum']
+    # def __validateChecksum(self):
+    #     if not 'payload' in self.parts or not 'checksum' in self.parts or not 'hopCount' in self.parts:
+    #         return False
+    #     #TODO: implement
+    #     #return md5(self.payload) == self.checksum (or something else)
+    #     return self.parts['hopCount'] > 0 and self.generateMd5(self.parts['payload']) == self.parts['checksum']
+
+    def generateMd5(self, string):
+        return hashlib.md5(string.encode()).hexdigest()
 
     def getACK(self):
-        if not self.isValid:
-            return ''
-        return self.srcNode + '|' + self.dstNode + '|' + str(self.hopCount) + '|' + self.segmentationType + '|' + self.messageId + '|' + self.segmentNumber + '/' + self.sequenceLength
+        # if not self.isValid:
+        #     return ''
+        return (self.parts['srcNode'] + self.SEPARATOR + self.parts['dstNode'] + self.SEPARATOR + str(self.parts['hopCount']) 
+            + self.SEPARATOR + self.parts['segmentationType'] + self.SEPARATOR + self.parts['messageId'] + self.SEPARATOR 
+            + self.parts['segmentNumber'] + '/' + self.parts['sequenceLength'])
         
 
     

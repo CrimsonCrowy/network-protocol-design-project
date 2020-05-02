@@ -1,5 +1,7 @@
+from Classes.Packet import Packet
 
 class Network():
+    HOP_COUNT = '15'
 
     def setMain(self, main):
         self.main = main
@@ -14,12 +16,22 @@ class Network():
         except Exception as e:
             return None
 
+        if packet.parts['dstNode'] == self.main.server.NODE_NAME:
+            pass
         return packet
         
 
 
-    def addDataToOutgoingPackets(self, payload, destination):
-        pass
+    def addDataToOutgoingPackets(self, packets, destination):
+        ret = []
+        for packet in packets:
+            packet.raw = (self.main.server.NODE_NAME + Packet.SEPARATOR + destination 
+                + Packet.SEPARATOR + self.HOP_COUNT + Packet.SEPARATOR + packet.raw)
+            packet.parts['dstNode'] = destination
+            ret.append(packet)
+
+        return ret #probably returning packets array directly will work too
+        
 
 
 

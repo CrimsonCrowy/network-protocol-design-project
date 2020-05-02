@@ -45,20 +45,23 @@ class Main():
         #     segment = router.handleIncomingPacket(segment)
 
 
-    def sendPayload(self, payload, destination):
+    def sendPayload(self, payload, destination, packetType):
         
         #returns null if does not have destination node's key?
-        payload = encryption.encryptPayload(payload)
+        # payload = encryption.encryptPayload(payload)
 
-        # array of packets
         if payload:
-            packets = segmentationLayer.generatePacketsFromPayload(payload)
+            # array of packets
+            packets = self.segmenter.generatePacketsFromPayload(payload, destination, packetType)
 
         if packets:
-            packets = networkLayer.addDataToOutgoingPackets(packets, destination)
+            packets = self.network.addDataToOutgoingPackets(packets, destination)
 
-        if packets:
-            queue.add(packets)
+        for packet in packets:
+            self.server.sendMsg(packet.raw, "127.0.0.1", 5124)
+
+        # if packets:
+        #     queue.add(packets)
 
 
 

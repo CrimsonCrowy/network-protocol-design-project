@@ -4,6 +4,7 @@ from Classes.Router import Router
 from Classes.Segmenter import Segmenter
 from Classes.Packet import Packet
 class Server():
+    NODE_NAME = 'STAS'
 
     def setMain(self, main):
         self.main = main
@@ -46,20 +47,24 @@ class Server():
             # print(address)
 
 
-    def sendMsg(self, msgFromClient, finalAddressIP, finalAddressPort, flag):
-        payload = 'MESSAGE|' + msgFromClient
-        packetRaw = 'Furkan|Stas|223|SEGMENT|1s6Ak96|1/2|' + hashlib.md5(payload.encode()).hexdigest() + '|CHAT|' + payload
+    def sendMsg(self, msgFromClient, finalAddressIP, finalAddressPort):
+        # payload = 'MESSAGE|' + msgFromClient
+        # packetRaw = 'Furkan|Stas|223|SEGMENT|1s6Ak96|1/2|' + hashlib.md5(payload.encode()).hexdigest() + '|CHAT|' + payload
 
-        payload = ' second packet'
-        packetRaw2 = 'Furkan|Stas|223|SEGMENT|1s6Ak96|2/2|' + hashlib.md5(payload.encode()).hexdigest() + '|CHAT|' + payload
+        # payload = ' second packet'
+        # packetRaw2 = 'Furkan|Stas|223|SEGMENT|1s6Ak96|2/2|' + hashlib.md5(payload.encode()).hexdigest() + '|CHAT|' + payload
 
-        # bytesToSend = str.encode(msgFromClient + "#" + str(finalAddressIP) + "#" + str(finalAddressPort) + "#" + flag)
-        bytesToSend = str.encode(packetRaw)
-        bytesToSend2 = str.encode(packetRaw2)
+        # # bytesToSend = str.encode(msgFromClient + "#" + str(finalAddressIP) + "#" + str(finalAddressPort) + "#")
+        # bytesToSend = str.encode(packetRaw)
+        # bytesToSend2 = str.encode(packetRaw2)
+        # address = finalAddressIP, finalAddressPort
+        # # print(address)
+        # self.UDPServerSocket.sendto(str.encode(''), address)
+        # self.UDPServerSocket.sendto(bytesToSend, address)
+        # self.UDPServerSocket.sendto(bytesToSend2, address)
+
         address = finalAddressIP, finalAddressPort
-        # print(address)
-        self.UDPServerSocket.sendto(bytesToSend, address)
-        self.UDPServerSocket.sendto(bytesToSend2, address)
+        self.UDPServerSocket.sendto(str.encode(msgFromClient), address)
 
     def sendPacket(self, rawPacket, address):
         bytesToSend = str.encode(packet)

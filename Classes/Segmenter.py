@@ -6,12 +6,14 @@ class Segmenter():
     ACK = 'ACK'
     SEGMENT = 'SEGMENT'
     SEGMENT_SEPARATOR = '/'
+    SEGMENT_SIZE = 20
 
     def setMain(self, main):
         self.main = main
 
     def __init__(self):
         self.segs = {}
+        self.messageId = 100000
 
     def handleIncomingPacket(self, packet):
         packet = self.__parsePacket(packet)
@@ -61,3 +63,39 @@ class Segmenter():
         except:
             return None
         return packet
+
+    def generatePacketsFromPayload(self, payload, destination, packetType):
+        payloadSegments = self.__splitPayload(payload)
+        self.messageId += 1
+        msgId = str(self.messageId)
+        packets = []
+        counter = 0
+        length = str(len(payloadSegments))
+        for ps in payloadSegments:
+            packet = Packet('')
+            counter += 1
+            segment = (self.SEGMENT + Packet.SEPARATOR + msgId + Packet.SEPARATOR 
+                + str(counter) + self.SEGMENT_SEPARATOR + length + Packet.SEPARATOR 
+                + packet.generateMd5(ps) + Packet.SEPARATOR + packetType + Packet.SEPARATOR + ps)
+            packet.raw = segment
+            packet.parts['segmentationType'] = self.SEGMENT # not sure that it will be used
+            packets.append(packet)
+
+        return packets
+
+
+    def __splitPayload(self, payload):
+        segments = []
+        indexFrom = 0
+        while True:
+            indexTo = indexFrom + self.SEGMENT_SIZE
+            segment = payload[indexFrom:indexTo]
+            length = len(segment)
+            if length == 0:
+                break
+            segments.append(segment)
+            indexFrom = indexTo
+
+        return segments
+
+
