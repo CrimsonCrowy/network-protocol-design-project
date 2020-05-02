@@ -11,35 +11,7 @@ class Segmenter():
         self.main = main
 
     def __init__(self):
-        # self.nodeName = localNodeName 
-        self.server = None
-        self.graph = None
         self.segs = {}
-        
-
-    # def setServer(self, server):
-    #     self.server = server
-
-    # def handlePacket(self, packet):
-    #     if self._shouldBeForwarded(packet):
-    #         self._foward(packet)
-
-    #     elif self._destinationReached(packet):
-    #         self._handleReceivedPacket(packet)
-
-
-    def _shouldBeForwarded(self, packet):
-        return self.nodeName != packet.dstNode
-
-    def _foward(self, packet):
-        destination = self._extractDestinationFromPacket(packet)
-        nextHop = self._getNextHop(destination)
-        if nextHop:
-            packet = self._modifyPacketBeforeForwarding(packet)
-            self.server.sendPacket(packet, nextHop)
-
-    def _destinationReached(self, packet):
-        return self.nodeName == packet.dstNode
 
     def handleIncomingPacket(self, packet):
         packet = self.__parsePacket(packet)
@@ -58,7 +30,6 @@ class Segmenter():
 
         return self.__combineSegments(packet)
 
-
     def __combineSegments(self, packet):
         # Clearing of old self.segs entries can be implemented
         if not packet.parts['srcNode'] in self.segs:
@@ -75,8 +46,6 @@ class Segmenter():
             return packet
         return None
 
-
-
     def __parsePacket(self, packet):
         try:
             packet.parts['segmentationType'] = packet.splitted.pop()
@@ -92,50 +61,3 @@ class Segmenter():
         except:
             return None
         return packet
-
-    # def handleFinishedSequence(self, packetType, payload):
-    #     # TODO: implement
-    #     return True
-
-
-    def _isUpdatePacket(self, packet):
-        # TODO: implement
-        return True
-
-    def _handleUpdatePacket(self, packet):
-        nodeState = self._extractNodeStateFromPacket(packet)
-        if nodeState and self.nodeStateShouldBeUpdated(nodeState):
-            self._saveNodeState(nodeState)
-            self._floodUpdatePacket(packet)
-            self._regenerateTopologyGraph()
-
-        
-
-    def _extractNodeStateFromPacket(self, packet):
-        nodeState = packet
-        # TODO: implement
-        return nodeState
-
-    def nodeStateShouldBeUpdated(self, nodeState):
-        # TODO: compare version numbers and return True/False
-        return nodeState
-
-    def _floodUpdatePacket(self, packet):
-        # TODO: implement
-        pass
-
-    def _extractDestinationFromPacket(self, packet):
-        # TODO: implement
-        return 'E'
-
-    def _getNextHop(self, destination):
-        try:
-            return self.graph.dijkstra(self.nodeName, destination)[1]
-        except:
-            return False
-
-    def _modifyPacketBeforeForwarding(self, packet):
-        # TODO: decrease packet hops before timeout or whatever
-        return packet
-
-
