@@ -21,25 +21,28 @@ class Main():
         packet = Packet(raw)
         segment = None
 
-        print(packet.isValid)
+        # print(packet.isValid)
 
         
-        # may forward packet or drop it. returns parsed paket if we are destination or if destination is broadcast. null otherwise.
+        # may forward packet or drop it. returns parsed paket if we are destination or if destination is broadcast. None otherwise.
         packet = self.network.handleIncomingPacket(packet) 
 
         # handles relationship with message queue regarding ACK, ckecks checksum. Parses packet up to payload.
         if packet:
-            #segment is the same packet object, but has compiled payload.
-            segment = segmentationLayer.handleIncomingPacket(packet)
+            #packet is the same packet object, but has compiled/combined payload.
+            packet = self.segmenter.handleIncomingPacket(packet)
 
-        if segment:
-            segment = encryption.decryptSegment(segment)
+        if packet:
+            print(packet.parts)
 
-        if segment and segment.parts.packetType == 'chat':
-            segment = segmentationLayer.handleIncomingPacket(segment)
+        # if segment:
+        #     segment = encryption.decryptSegment(segment)
 
-        if segment and segment.parts.packetType == 'routing':
-            segment = router.handleIncomingPacket(segment)
+        # if segment and segment.parts.packetType == 'CHAT':
+        #     segment = segmentationLayer.handleIncomingPacket(segment)
+
+        # if segment and segment.parts.packetType == 'ROUTING':
+        #     segment = router.handleIncomingPacket(segment)
 
 
     def sendPayload(self, payload, destination):

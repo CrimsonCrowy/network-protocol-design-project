@@ -48,14 +48,18 @@ class Server():
 
     def sendMsg(self, msgFromClient, finalAddressIP, finalAddressPort, flag):
         payload = 'MESSAGE|' + msgFromClient
-
         packetRaw = 'Furkan|Stas|223|SEGMENT|1s6Ak96|1/2|' + hashlib.md5(payload.encode()).hexdigest() + '|CHAT|' + payload
+
+        payload = ' second packet'
+        packetRaw2 = 'Furkan|Stas|223|SEGMENT|1s6Ak96|2/2|' + hashlib.md5(payload.encode()).hexdigest() + '|CHAT|' + payload
 
         # bytesToSend = str.encode(msgFromClient + "#" + str(finalAddressIP) + "#" + str(finalAddressPort) + "#" + flag)
         bytesToSend = str.encode(packetRaw)
+        bytesToSend2 = str.encode(packetRaw2)
         address = finalAddressIP, finalAddressPort
         # print(address)
         self.UDPServerSocket.sendto(bytesToSend, address)
+        self.UDPServerSocket.sendto(bytesToSend2, address)
 
     def sendPacket(self, rawPacket, address):
         bytesToSend = str.encode(packet)
