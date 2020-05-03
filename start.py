@@ -8,6 +8,7 @@ from Classes.Server import Server
 from Classes.Main import Main
 from Classes.Network import Network
 from Classes.Segmenter import Segmenter
+from Classes.Crypto import Crypto
 # import Classes * 
 
 
@@ -20,8 +21,9 @@ def start():
     router = Router()
     network = Network()
     segmenter = Segmenter()
+    crypto = Crypto()
 
-    main = Main(router, server, network, segmenter)
+    main = Main(router, server, network, segmenter, crypto)
 
 
 

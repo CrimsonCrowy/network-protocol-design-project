@@ -1,0 +1,2 @@
+# pip3 install -r requirements
+libnacl==1.7.1

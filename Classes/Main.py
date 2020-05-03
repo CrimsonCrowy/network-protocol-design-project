@@ -4,16 +4,18 @@ from Classes.Packet import Packet
 
 class Main():
 
-    def __init__(self, router, server, network, segmenter):
+    def __init__(self, router, server, network, segmenter, crypto):
         self.router = router
         self.server = server
         self.network = network
         self.segmenter = segmenter
+        self.crypto = crypto
 
         self.router.setMain(self)
         self.server.setMain(self)
         self.network.setMain(self)
         self.segmenter.setMain(self)
+        self.crypto.setMain(self)
         
 
 
@@ -33,10 +35,10 @@ class Main():
             packet = self.segmenter.handleIncomingPacket(packet)
 
         if packet:
-            print(packet.parts)
+            packet = self.crypto.decryptPacket(packet)
 
-        # if segment:
-        #     segment = encryption.decryptSegment(segment)
+        if packet:
+            print(packet.parts)
 
         # if segment and segment.parts.packetType == 'CHAT':
         #     segment = segmentationLayer.handleIncomingPacket(segment)
@@ -48,7 +50,7 @@ class Main():
     def sendPayload(self, payload, destination, packetType):
         
         #returns null if does not have destination node's key?
-        # payload = encryption.encryptPayload(payload)
+        payload = self.crypto.encryptPayload(payload, destination)
 
         if payload:
             # array of packets
