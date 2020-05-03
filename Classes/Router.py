@@ -1,3 +1,4 @@
+from time import sleep
 from Classes.Graph import Graph
 
 class Router():
@@ -21,8 +22,8 @@ class Router():
     def setServer(self, server):
         self.server = server
 
-    def _saveNodeState(self, nodeAddress, nodeState):
-        self.nodesState[nodeAddress] = nodeState
+    def __saveNodeState(self, nodeState, nodeName):
+        self.nodesState[nodeName] = nodeState
 
     def __regenerateTopologyGraph(self):
         graph = {}
@@ -42,58 +43,83 @@ class Router():
         self.graph = Graph(graphArguments)
 
 
-    def handlePacket(self, packet):
-        if self._shouldBeForwarded(packet):
-            self._foward(packet)
+    # def handlePacket(self, packet):
+    #     if self._shouldBeForwarded(packet):
+    #         self._foward(packet)
 
-        elif self._destinationReached(packet):
-            self._handleReceivedPacket(packet)
+    #     elif self._destinationReached(packet):
+    #         self._handleReceivedPacket(packet)
 
-        elif self._isUpdatePacket(packet):
-            self._handleUpdatePacket(packet)
+    #     elif self._isUpdatePacket(packet):
+    #         self._handleUpdatePacket(packet)
 
-    def _shouldBeForwarded(self, packet):
-        # TODO: implement
-        return False
+    # def _shouldBeForwarded(self, packet):
+    #     # TODO: implement
+    #     return False
 
-    def _foward(self, packet):
-        destination = self._extractDestinationFromPacket(packet)
-        nextHop = self._getNextHop(destination)
-        if nextHop:
-            packet = self._modifyPacketBeforeForwarding(packet)
-            self.server.sendPacket(packet, nextHop)
+    # def _foward(self, packet):
+    #     destination = self._extractDestinationFromPacket(packet)
+    #     nextHop = self._getNextHop(destination)
+    #     if nextHop:
+    #         packet = self._modifyPacketBeforeForwarding(packet)
+    #         self.server.sendPacket(packet, nextHop)
 
-    def _destinationReached(self, packet):
-        # TODO: check if this packet belongs to this node
-        return False
+    # def _destinationReached(self, packet):
+    #     # TODO: check if this packet belongs to this node
+    #     return False
 
-    def _handleReceivedPacket(self, packet):
-        # TODO: implement
-        return False
+    # def _handleReceivedPacket(self, packet):
+    #     # TODO: implement
+    #     return False
 
-    def _isUpdatePacket(self, packet):
-        # TODO: implement
-        return True
+    # def _isUpdatePacket(self, packet):
+    #     # TODO: implement
+    #     return True
 
-    def _handleUpdatePacket(self, packet):
-        nodeState = self._extractNodeStateFromPacket(packet)
-        if nodeState and self.nodeStateShouldBeUpdated(nodeState):
-            self._saveNodeState(nodeState)
-            self._floodUpdatePacket(packet)
+    def handleIncomingPacket(self, packet):
+        packet = self.__parsePacket(packet)
+        if not packet:
+            return
+
+        nodeState = self.__extractNodeStateFromPacket(packet)
+
+
+
+        if nodeState and self.__nodeStateShouldBeUpdated(nodeState, packet.parts['updateInfoNodeName']):
+            self.__saveNodeState(nodeState,packet.parts['updateInfoNodeName'])
             self.__regenerateTopologyGraph()
+            self.__floodUpdatePacket(packet)
+
+    def __parsePacket(self, packet):
+        try:
+            packet.parts['updateInfoNodeName'] = packet.splitted.pop()
+            packet.parts['version'] = int(packet.splitted.pop())
+            packet.parts['neighbourCount'] = packet.splitted.pop()
+            packet.parts['neighbours'] = {}
+            for neighbour in packet.splitted:
+                nInfo = neighbour.split('&')
+                packet.parts['neighbours'][nInfo[0]] = nInfo[1]
+        except:
+            return None
+        return packet
 
         
 
-    def _extractNodeStateFromPacket(self, packet):
-        nodeState = packet
-        # TODO: implement
+    def __extractNodeStateFromPacket(self, packet):
+        nodeState = {
+            'v': packet.parts['version'],
+            'n': packet.parts['neighbours']
+        }
         return nodeState
 
-    def nodeStateShouldBeUpdated(self, nodeState):
-        # TODO: compare version numbers and return True/False
-        return nodeState
+    def __nodeStateShouldBeUpdated(self, nodeState, fromNode):
+        if not fromNode in self.nodesState:
+            return True
+        if self.nodesState[fromNode]['v'] < nodeState['v']:
+            return True
+        return False
 
-    def _floodUpdatePacket(self, packet):
+    def __floodUpdatePacket(self, packet):
         # TODO: implement
         pass
 
@@ -101,15 +127,28 @@ class Router():
         # TODO: implement
         return 'E'
 
-    def _getNextHop(self, destination):
+    def getNextHop(self, destination):
+        if destination in self.main.config.neighbours:
+            return destination
         try:
-            return self.graph.dijkstra(self.nodeName, destination)[1]
+            return self.graph.dijkstra(self.main.config.getMyName, destination)[1]
         except:
             return False
 
     def _modifyPacketBeforeForwarding(self, packet):
         # TODO: decrease packet hops before timeout or whatever
         return packet
+
+    def watchNeighbours(self):
+        while True:
+            # print('watchNeighbours Tick')
+            sleep(5)
+            
+
+
+
+
+
 
 
 

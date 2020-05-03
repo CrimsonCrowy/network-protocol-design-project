@@ -25,7 +25,7 @@ class Network():
     def addDataToOutgoingPackets(self, packets, destination):
         ret = []
         for packet in packets:
-            packet.raw = (self.main.server.NODE_NAME + Packet.SEPARATOR + destination 
+            packet.raw = (self.main.config.getMyName() + Packet.SEPARATOR + destination 
                 + Packet.SEPARATOR + self.HOP_COUNT + Packet.SEPARATOR + packet.raw)
             packet.parts['dstNode'] = destination
             ret.append(packet)

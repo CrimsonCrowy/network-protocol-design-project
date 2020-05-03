@@ -25,6 +25,7 @@ class Queue():
                     for e in range(len(self.queOnWait)):
                         #Change the number bellow to however much time the program needs to check for packet waits(in seconds)
                         if now - self.queOnWait[e][1] > self.SECONDS_TO_RESEND:
+                            self.main.server.sendPacket(self.queOnWait[e][0])
                             print('packet resent!')
                             #Send the packet again? Call To send fucnction and new timestamp
                             self.queOnWait[e][1] = now
@@ -36,9 +37,7 @@ class Queue():
                     while len(self.queToSend) > 0:
                         
                         packetToSend = self.queToSend.pop(0)
-                        #Put Here What ever funtion will send the packets
-
-                        print('packet sent!')
+                        self.main.server.sendPacket(packetToSend)
                         
                         self.queOnWait.append([packetToSend, now, 0])
             except:
@@ -48,13 +47,20 @@ class Queue():
     def addToQue(self, packetObject):
         self.queToSend.append(packetObject)
 
-    def popFromWait(self, packetOject):
+    def receiveACK(self, packet):
+        # print(packet.raw)
+        keysToPop = []
         for e in range(len(self.queOnWait)):
             #xxx needs to be subsitutted with the proper identifier within the packet object, or if not a value, then the function that gets the identifiers
-            if (self.queOnWait[e][0].parts['srcNode'] == packetOject.parts['srcNode'] and 
-                self.queOnWait[e][0].parts['messageId'] == packetOject.parts['messageId'] and
-                self.queOnWait[e][0].parts['segmentNumber'] == packetOject.parts['segmentNumber']):
-                self.queOnWait.pop(e)
+            if (self.queOnWait[e][0].parts['dstNode'] == packet.parts['srcNode'] and 
+                self.queOnWait[e][0].parts['messageId'] == packet.parts['messageId'] and
+                self.queOnWait[e][0].parts['segmentNumber'] == packet.parts['segmentNumber']):
+                keysToPop.append(e)
+                # self.queOnWait.pop(e)
+
+        keysToPop = list(reversed(keysToPop))
+        for ktp in keysToPop:
+            self.queOnWait.pop(ktp)
 
 
 

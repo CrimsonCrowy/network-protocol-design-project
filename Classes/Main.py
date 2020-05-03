@@ -4,20 +4,25 @@ from Classes.Packet import Packet
 
 class Main():
 
-    def __init__(self, router, server, network, segmenter, crypto):
+    def __init__(self, router, server, network, segmenter, crypto, queue, config):
         self.router = router
         self.server = server
         self.network = network
         self.segmenter = segmenter
         self.crypto = crypto
+        self.queue = queue
+
+        self.config = config
 
         self.router.setMain(self)
         self.server.setMain(self)
         self.network.setMain(self)
         self.segmenter.setMain(self)
         self.crypto.setMain(self)
-        
+        self.queue.setMain(self)
 
+        self.crypto.initialize()
+        
 
     def handleReceivedPacket(self, raw):
         packet = Packet(raw)
@@ -38,13 +43,13 @@ class Main():
             packet = self.crypto.decryptPacket(packet)
 
         if packet:
-            print(packet.parts)
+            print(packet.parts['payload'])
 
         # if segment and segment.parts.packetType == 'CHAT':
         #     segment = segmentationLayer.handleIncomingPacket(segment)
 
-        # if segment and segment.parts.packetType == 'ROUTING':
-        #     segment = router.handleIncomingPacket(segment)
+        if packet and packet.parts['packetType'] == 'ROUTING':
+            self.router.handleIncomingPacket(packet)
 
 
     def sendPayload(self, payload, destination, packetType):
@@ -60,7 +65,10 @@ class Main():
             packets = self.network.addDataToOutgoingPackets(packets, destination)
 
         for packet in packets:
-            self.server.sendMsg(packet.raw, "127.0.0.1", 5124)
+            self.queue.addToQue(packet)
+            # self.server.sendPacket(packet)
+            # self.server.sendMsg(packet.raw, "127.0.0.1", 5124)
+            # self.server.sendMsg(packet.raw, "127.0.0.1", 5100)
 
         # if packets:
         #     queue.add(packets)

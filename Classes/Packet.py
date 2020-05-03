@@ -51,9 +51,9 @@ class Packet():
     def getACK(self):
         # if not self.isValid:
         #     return ''
-        return (self.parts['srcNode'] + self.SEPARATOR + self.parts['dstNode'] + self.SEPARATOR + str(self.parts['hopCount']) 
-            + self.SEPARATOR + self.parts['segmentationType'] + self.SEPARATOR + self.parts['messageId'] + self.SEPARATOR 
-            + self.parts['segmentNumber'] + '/' + self.parts['sequenceLength'])
+        return (self.parts['dstNode'] + self.SEPARATOR + self.parts['srcNode'] + self.SEPARATOR + str(self.parts['hopCount']) 
+            + self.SEPARATOR + 'ACK' + self.SEPARATOR + self.parts['messageId'] + self.SEPARATOR 
+            + str(self.parts['segmentNumber']) + '/' + str(self.parts['sequenceLength']))
         
 
     

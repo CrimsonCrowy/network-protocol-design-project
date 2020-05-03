@@ -6,7 +6,7 @@ class Segmenter():
     ACK = 'ACK'
     SEGMENT = 'SEGMENT'
     SEGMENT_SEPARATOR = '/'
-    SEGMENT_SIZE = 20
+    SEGMENT_SIZE = 100
 
     def setMain(self, main):
         self.main = main
@@ -22,12 +22,15 @@ class Segmenter():
             return None
 
         if packet.parts['segmentationType'] == self.ACK:
-            # TODO: pass this packet to queue
+            self.main.queue.receiveACK(packet)
             return None
 
         if packet.parts['segmentationType'] == self.SEGMENT and not packet.isValid():
             return None
 
+        ack = Packet(packet.getACK())
+        ack.parts['dstNode'] = packet.parts['srcNode']
+        self.main.server.sendPacket(ack)
         #TODO: send ACK packet
 
         return self.__combineSegments(packet)
@@ -74,11 +77,14 @@ class Segmenter():
         for ps in payloadSegments:
             packet = Packet('')
             counter += 1
+            # print(ps)
             segment = (self.SEGMENT + Packet.SEPARATOR + msgId + Packet.SEPARATOR 
                 + str(counter) + self.SEGMENT_SEPARATOR + length + Packet.SEPARATOR 
                 + packet.generateMd5(ps) + Packet.SEPARATOR + packetType + Packet.SEPARATOR + ps)
             packet.raw = segment
             packet.parts['segmentationType'] = self.SEGMENT # not sure that it will be used
+            packet.parts['messageId'] = msgId
+            packet.parts['segmentNumber'] = counter
             packets.append(packet)
 
         return packets

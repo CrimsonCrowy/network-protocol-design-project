@@ -30,7 +30,7 @@ class Server():
             # TODO: add packetReceivedFrom to Packet. Grab sender IP from bytesAddressPair[1] and compare to nodes list.
             bytesAddressPair = self.UDPServerSocket.recvfrom(self.bufferSize)
             rawPacket = bytesAddressPair[0].decode()
-            print(rawPacket)
+            # print(rawPacket)
             self.main.handleReceivedPacket(rawPacket)
             # try:
             #     packet = Packet(bytesAddressPair[0].decode())
@@ -66,7 +66,15 @@ class Server():
         address = finalAddressIP, finalAddressPort
         self.UDPServerSocket.sendto(str.encode(msgFromClient), address)
 
-    def sendPacket(self, rawPacket, address):
-        bytesToSend = str.encode(packet)
-        address = address.split(":")
-        self.UDPServerSocket.sendto(bytesToSend, address)
+    def sendPacket(self, packet):
+        try:
+            nextHop = self.main.router.getNextHop(packet.parts['dstNode'])
+            address = self.main.config.neighbours[nextHop]
+            self.UDPServerSocket.sendto(str.encode(packet.raw), address)
+        except:
+            pass
+
+    # def sendPacket(self, rawPacket, address):
+    #     bytesToSend = str.encode(packet)
+    #     address = address.split(":")
+    #     self.UDPServerSocket.sendto(bytesToSend, address)
