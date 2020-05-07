@@ -10,7 +10,6 @@ class Router():
         self.main = main
 
     def __init__(self):
-        # self.nodeName = localNodeName 
         self.nodesState = {}
         self.localState = {
             'v': 0, # version 
@@ -30,12 +29,10 @@ class Router():
             }
 
 
-    # def setServer(self, server):
-    #     self.server = server
-
     def __saveNodeState(self, nodeState, nodeName):
         self.nodesState[nodeName] = nodeState
 
+    
     def __regenerateTopologyGraph(self):
         graph = {}
         graphArguments = []
@@ -53,39 +50,6 @@ class Router():
         self.graph = Graph(graphArguments)
 
 
-    # def handlePacket(self, packet):
-    #     if self._shouldBeForwarded(packet):
-    #         self._foward(packet)
-
-    #     elif self._destinationReached(packet):
-    #         self._handleReceivedPacket(packet)
-
-    #     elif self._isUpdatePacket(packet):
-    #         self._handleUpdatePacket(packet)
-
-    # def _shouldBeForwarded(self, packet):
-    #     # TODO: implement
-    #     return False
-
-    # def _foward(self, packet):
-    #     destination = self._extractDestinationFromPacket(packet)
-    #     nextHop = self._getNextHop(destination)
-    #     if nextHop:
-    #         packet = self._modifyPacketBeforeForwarding(packet)
-    #         self.server.sendPacket(packet, nextHop)
-
-    # def _destinationReached(self, packet):
-    #     # TODO: check if this packet belongs to this node
-    #     return False
-
-    # def _handleReceivedPacket(self, packet):
-    #     # TODO: implement
-    #     return False
-
-    # def _isUpdatePacket(self, packet):
-    #     # TODO: implement
-    #     return True
-
     def handleIncomingPacket(self, packet):
         packet = self.__parsePacket(packet)
         if not packet:
@@ -93,13 +57,7 @@ class Router():
 
         nodeState = self.__extractNodeStateFromPacket(packet)
 
-        # print(packet.parts['updateInfoNodeName'])
-        # print(packet.parts['version'])
-        # print(packet.parts['neighbours'])
-
         if nodeState:
-            # print('__handleIfIsUpdatePacketFromNeighbour')
-            # print(packet.parts['updateInfoNodeName'])
             self.__handleIfIsUpdatePacketFromNeighbour(packet.parts['updateInfoNodeName'])
 
         if nodeState and self.__nodeStateShouldBeUpdated(nodeState, packet.parts['updateInfoNodeName']):
@@ -107,16 +65,13 @@ class Router():
             self.__regenerateTopologyGraph()
             self.__sendStateToAllNeighbours(nodeState, packet.parts['updateInfoNodeName'], packet.parts['srcNode'])
 
+
     def __parsePacket(self, packet):
         packet.splitPayload()
-        # print(packet.parts)
-        # print(packet.splitted)
         try:
             packet.parts['updateInfoNodeName'] = packet.splitted.pop()
             packet.parts['version'] = int(packet.splitted.pop())
             packet.parts['neighbourCount'] = int(packet.splitted.pop())
-            # print(packet.parts)
-            # print(packet.splitted)
             packet.parts['neighbours'] = {}
             for neighbour in packet.splitted:
                 try:
@@ -127,8 +82,7 @@ class Router():
         except:
             return None
         return packet
-
-        
+  
 
     def __extractNodeStateFromPacket(self, packet):
         nodeState = {
@@ -136,6 +90,7 @@ class Router():
             'n': packet.parts['neighbours']
         }
         return nodeState
+
 
     def __nodeStateShouldBeUpdated(self, nodeState, fromNode):
         if fromNode == self.main.config.getMyName():
@@ -145,6 +100,7 @@ class Router():
         if self.nodesState[fromNode]['v'] < nodeState['v']:
             return True
         return False
+
 
     def __handleIfIsUpdatePacketFromNeighbour(self, fromNode):
         if fromNode in self.neighbours:
@@ -156,14 +112,13 @@ class Router():
                 self.__regenerateTopologyGraph()
                 self.__sendNodeFullTopology(fromNode)
                 self.__sendStateToAllNeighbours(self.localState, self.main.config.getMyName())
-                #TODO: add node to local state and broadcast
 
 
     def __sendNodeFullTopology(self, nodeName):
         for stateNodeName, state in self.nodesState.items():
-            # print('Sending full topology: ', self.__compilePayloadFromState(state, nodeName), nodeName, self.ROUTING)
             self.main.sendPayload(self.__compilePayloadFromState(state, stateNodeName), nodeName, self.ROUTING)
         self.main.sendPayload(self.__compilePayloadFromState(self.localState, self.main.config.getMyName()), nodeName, self.ROUTING)
+
 
     def __compilePayloadFromState(self, state, nodeName):
         nodes = []
@@ -171,26 +126,21 @@ class Router():
             nodes.append(node + '&' + str(weight))
         return nodeName + '|' + str(state['v']) + '|' + str(len(state['n'])) + '|' + '|'.join(nodes)
 
+
     def __sendStateToAllNeighbours(self, nodeState, stateOwnerName, exceptNode = ''):
         for nodeName, weight in self.localState['n'].items():
             if nodeName != exceptNode:
                 self.main.sendPayload(self.__compilePayloadFromState(nodeState, stateOwnerName), nodeName, self.ROUTING)
 
-        #TODO: implement what name says. Optional parameter syntaix may be wrong
-
 
     def getNextHop(self, destination):
         if destination in self.main.config.getMyNeighbours():
             return destination
-        # print(self.graph.dijkstra(self.main.config.getMyName(), destination))
         try:
             return self.graph.dijkstra(self.main.config.getMyName(), destination)[1]
         except:
             return False
 
-    # def _modifyPacketBeforeForwarding(self, packet):
-    #     # TODO: decrease packet hops before timeout or whatever
-    #     return packet
 
     def watchNeighbours(self):
         secsAfterLastNeighbourBroadcast = 10
@@ -213,11 +163,7 @@ class Router():
                     self.__sendStateToAllNeighbours(self.localState, self.main.config.getMyName())
                     
 
-            # print('watchNeighbours Tick')
-            
-            # if not self.neighbours:
-            #     continue
-            
+
 
 
 

@@ -28,9 +28,6 @@ class Main():
     def handleReceivedPacket(self, raw):
         packet = Packet(raw)
         segment = None
-
-        # print(packet.isValid)
-
         
         # may forward packet or drop it. returns parsed paket if we are destination or if destination is broadcast. None otherwise.
         packet = self.network.handleIncomingPacket(packet) 
@@ -49,7 +46,6 @@ class Main():
 
         if packet and packet.parts['packetType'] == 'CHAT':
             print(packet.parts['payload'])
-            # print(raw)
 
         # if segment and segment.parts.packetType == 'CHAT':
         #     segment = segmentationLayer.handleIncomingPacket(segment)
@@ -74,15 +70,6 @@ class Main():
             return packets
         return None
 
-        # for packet in packets:
-        #     self.queue.addToQue(packet)
-            # self.server.sendPacket(packet)
-            # self.server.sendMsg(packet.raw, "127.0.0.1", 5124)
-            # self.server.sendMsg(packet.raw, "127.0.0.1", 5100)
-
-        # if packets:
-        #     queue.add(packets)
-
 
     def sendPayload(self, payload, destination, packetType):
         packets = self.__preparePacketsForSending(payload, destination, packetType)
@@ -96,6 +83,7 @@ class Main():
         if packets:
             for packet in packets:
                 self.server.sendPacket(packet)
+
 
     def forwardPacket(self, packet):
         self.server.sendPacket(packet)

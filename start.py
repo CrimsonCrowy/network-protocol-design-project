@@ -1,26 +1,19 @@
-# import socket
 import threading
 import re
 from time import sleep
 from Classes.Router import Router
 from Classes.Server import Server
-# from Classes.Graph import Graph
 from Classes.Main import Main
 from Classes.Network import Network
 from Classes.Segmenter import Segmenter
 from Classes.Crypto import Crypto
 from Classes.Config import Config
 from Classes.Queue import Queue
-# import Classes * 
-
 
 
 def start():
     nodeName = str(input("Enter your name: "))
     config = Config(nodeName)
-
-    # port = 5124
-    # port = 5100
     
     server = Server(config.getMyName(), config.getMyIp(), config.getMyPort(), config.getMyPort(), 1024)
     tServer = threading.Thread(target=server.recievePacket, daemon=True)
@@ -40,9 +33,6 @@ def start():
     crypto = Crypto()
 
     main = Main(router, server, network, segmenter, crypto, queue, config)
-
-
-
 
 
 

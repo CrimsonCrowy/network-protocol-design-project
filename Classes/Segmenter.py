@@ -11,9 +11,11 @@ class Segmenter():
     def setMain(self, main):
         self.main = main
 
+
     def __init__(self):
         self.segs = {}
         self.messageId = 100000
+
 
     def handleIncomingPacket(self, packet):
         packet = self.__parsePacket(packet)
@@ -31,9 +33,9 @@ class Segmenter():
         ack = Packet(packet.getACK())
         ack.parts['dstNode'] = packet.parts['srcNode']
         self.main.server.sendPacket(ack)
-        #TODO: send ACK packet
 
         return self.__combineSegments(packet)
+
 
     def __combineSegments(self, packet):
         # Clearing of old self.segs entries can be implemented
@@ -51,6 +53,7 @@ class Segmenter():
             return packet
         return None
 
+
     def __parsePacket(self, packet):
         try:
             packet.parts['segmentationType'] = packet.splitted.pop()
@@ -67,6 +70,7 @@ class Segmenter():
             return None
         return packet
 
+
     def generatePacketsFromPayload(self, payload, destination, packetType):
         payloadSegments = self.__splitPayload(payload)
         self.messageId += 1
@@ -77,7 +81,6 @@ class Segmenter():
         for ps in payloadSegments:
             packet = Packet('')
             counter += 1
-            # print(ps)
             segment = (self.SEGMENT + Packet.SEPARATOR + msgId + Packet.SEPARATOR 
                 + str(counter) + self.SEGMENT_SEPARATOR + length + Packet.SEPARATOR 
                 + packet.generateMd5(ps) + Packet.SEPARATOR + packetType + Packet.SEPARATOR + ps)
