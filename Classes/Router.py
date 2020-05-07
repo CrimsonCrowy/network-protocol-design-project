@@ -1,8 +1,10 @@
+import time
 from time import sleep
 from Classes.Graph import Graph
 
 class Router():
-    BROADCAST = 'BROADCAST'
+    ROUTING = 'ROUTING'
+    SECONDS_TILL_CONSIDERED_OFFLINE = 12
 
     def setMain(self, main):
         self.main = main
@@ -17,10 +19,19 @@ class Router():
 
         self.server = None
         self.graph = None
+        self.neighbours = {}
         
 
-    def setServer(self, server):
-        self.server = server
+    def initialize(self):
+        for neighbour in self.main.config.getMyNeighbours():
+            self.neighbours[neighbour] = {
+                'isOnline': False,
+                'lastUpdateReceived': 0
+            }
+
+
+    # def setServer(self, server):
+    #     self.server = server
 
     def __saveNodeState(self, nodeState, nodeName):
         self.nodesState[nodeName] = nodeState
@@ -39,7 +50,6 @@ class Router():
                 graphArguments.append((originNodeAddress, neighbourNodeAddress, weight))
                 graphArguments.append((neighbourNodeAddress, originNodeAddress, weight))
 
-        # print(graphArguments)
         self.graph = Graph(graphArguments)
 
 
@@ -83,22 +93,37 @@ class Router():
 
         nodeState = self.__extractNodeStateFromPacket(packet)
 
+        # print(packet.parts['updateInfoNodeName'])
+        # print(packet.parts['version'])
+        # print(packet.parts['neighbours'])
 
+        if nodeState:
+            # print('__handleIfIsUpdatePacketFromNeighbour')
+            # print(packet.parts['updateInfoNodeName'])
+            self.__handleIfIsUpdatePacketFromNeighbour(packet.parts['updateInfoNodeName'])
 
         if nodeState and self.__nodeStateShouldBeUpdated(nodeState, packet.parts['updateInfoNodeName']):
             self.__saveNodeState(nodeState,packet.parts['updateInfoNodeName'])
             self.__regenerateTopologyGraph()
-            self.__floodUpdatePacket(packet)
+            self.__sendStateToAllNeighbours(nodeState, packet.parts['updateInfoNodeName'], packet.parts['srcNode'])
 
     def __parsePacket(self, packet):
+        packet.splitPayload()
+        # print(packet.parts)
+        # print(packet.splitted)
         try:
             packet.parts['updateInfoNodeName'] = packet.splitted.pop()
             packet.parts['version'] = int(packet.splitted.pop())
-            packet.parts['neighbourCount'] = packet.splitted.pop()
+            packet.parts['neighbourCount'] = int(packet.splitted.pop())
+            # print(packet.parts)
+            # print(packet.splitted)
             packet.parts['neighbours'] = {}
             for neighbour in packet.splitted:
-                nInfo = neighbour.split('&')
-                packet.parts['neighbours'][nInfo[0]] = nInfo[1]
+                try:
+                    nInfo = neighbour.split('&')
+                    packet.parts['neighbours'][nInfo[0]] = int(nInfo[1])
+                except:
+                    pass
         except:
             return None
         return packet
@@ -113,36 +138,85 @@ class Router():
         return nodeState
 
     def __nodeStateShouldBeUpdated(self, nodeState, fromNode):
+        if fromNode == self.main.config.getMyName():
+            return False
         if not fromNode in self.nodesState:
             return True
         if self.nodesState[fromNode]['v'] < nodeState['v']:
             return True
         return False
 
-    def __floodUpdatePacket(self, packet):
-        # TODO: implement
-        pass
+    def __handleIfIsUpdatePacketFromNeighbour(self, fromNode):
+        if fromNode in self.neighbours:
+            self.neighbours[fromNode]['lastUpdateReceived'] = time.time()
+            if not self.neighbours[fromNode]['isOnline']:
+                self.neighbours[fromNode]['isOnline'] = True
+                self.localState['n'][fromNode] = 1 # weight can be some random number
+                self.localState['v'] += 1
+                self.__regenerateTopologyGraph()
+                self.__sendNodeFullTopology(fromNode)
+                self.__sendStateToAllNeighbours(self.localState, self.main.config.getMyName())
+                #TODO: add node to local state and broadcast
 
-    def _extractDestinationFromPacket(self, packet):
-        # TODO: implement
-        return 'E'
+
+    def __sendNodeFullTopology(self, nodeName):
+        for stateNodeName, state in self.nodesState.items():
+            # print('Sending full topology: ', self.__compilePayloadFromState(state, nodeName), nodeName, self.ROUTING)
+            self.main.sendPayload(self.__compilePayloadFromState(state, stateNodeName), nodeName, self.ROUTING)
+        self.main.sendPayload(self.__compilePayloadFromState(self.localState, self.main.config.getMyName()), nodeName, self.ROUTING)
+
+    def __compilePayloadFromState(self, state, nodeName):
+        nodes = []
+        for node, weight in state['n'].items():
+            nodes.append(node + '&' + str(weight))
+        return nodeName + '|' + str(state['v']) + '|' + str(len(state['n'])) + '|' + '|'.join(nodes)
+
+    def __sendStateToAllNeighbours(self, nodeState, stateOwnerName, exceptNode = ''):
+        for nodeName, weight in self.localState['n'].items():
+            if nodeName != exceptNode:
+                self.main.sendPayload(self.__compilePayloadFromState(nodeState, stateOwnerName), nodeName, self.ROUTING)
+
+        #TODO: implement what name says. Optional parameter syntaix may be wrong
+
 
     def getNextHop(self, destination):
-        if destination in self.main.config.neighbours:
+        if destination in self.main.config.getMyNeighbours():
             return destination
+        # print(self.graph.dijkstra(self.main.config.getMyName(), destination))
         try:
-            return self.graph.dijkstra(self.main.config.getMyName, destination)[1]
+            return self.graph.dijkstra(self.main.config.getMyName(), destination)[1]
         except:
             return False
 
-    def _modifyPacketBeforeForwarding(self, packet):
-        # TODO: decrease packet hops before timeout or whatever
-        return packet
+    # def _modifyPacketBeforeForwarding(self, packet):
+    #     # TODO: decrease packet hops before timeout or whatever
+    #     return packet
 
     def watchNeighbours(self):
+        secsAfterLastNeighbourBroadcast = 10
         while True:
+            secsAfterLastNeighbourBroadcast += 1
+            sleep(1)
+            if secsAfterLastNeighbourBroadcast >= 10:
+                secsAfterLastNeighbourBroadcast = 0
+                for neighbour in self.main.config.getMyNeighbours():
+                    if neighbour != self.main.config.getMyName():
+                        self.main.sendPayloadAndForget(self.__compilePayloadFromState(self.localState, self.main.config.getMyName()), neighbour, self.ROUTING)
+
+            for neighbour in self.main.config.getMyNeighbours():
+                if (self.neighbours[neighbour]['isOnline'] 
+                    and time.time() - self.neighbours[neighbour]['lastUpdateReceived'] > self.SECONDS_TILL_CONSIDERED_OFFLINE):
+                    self.neighbours[neighbour]['isOnline'] = False
+                    self.localState['n'].pop(neighbour, None)
+                    self.localState['v'] += 1
+                    self.__regenerateTopologyGraph()
+                    self.__sendStateToAllNeighbours(self.localState, self.main.config.getMyName())
+                    
+
             # print('watchNeighbours Tick')
-            sleep(5)
+            
+            # if not self.neighbours:
+            #     continue
             
 
 

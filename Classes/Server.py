@@ -4,7 +4,7 @@ from Classes.Router import Router
 from Classes.Segmenter import Segmenter
 from Classes.Packet import Packet
 class Server():
-    NODE_NAME = 'STAS'
+    # NODE_NAME = 'STAS'
 
     def setMain(self, main):
         self.main = main
@@ -69,7 +69,8 @@ class Server():
     def sendPacket(self, packet):
         try:
             nextHop = self.main.router.getNextHop(packet.parts['dstNode'])
-            address = self.main.config.neighbours[nextHop]
+            # print(packet.parts['dstNode'], ' Next hop: ', nextHop)
+            address = self.main.config.addressList[nextHop]
             self.UDPServerSocket.sendto(str.encode(packet.raw), address)
         except:
             pass

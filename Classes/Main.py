@@ -22,6 +22,7 @@ class Main():
         self.queue.setMain(self)
 
         self.crypto.initialize()
+        self.router.initialize()
         
 
     def handleReceivedPacket(self, raw):
@@ -42,8 +43,13 @@ class Main():
         if packet:
             packet = self.crypto.decryptPacket(packet)
 
-        if packet:
+        if packet and packet.parts['packetType'] == 'ROUTING':
+            # print(packet.parts['payload'])
+            pass
+
+        if packet and packet.parts['packetType'] == 'CHAT':
             print(packet.parts['payload'])
+            # print(raw)
 
         # if segment and segment.parts.packetType == 'CHAT':
         #     segment = segmentationLayer.handleIncomingPacket(segment)
@@ -52,8 +58,8 @@ class Main():
             self.router.handleIncomingPacket(packet)
 
 
-    def sendPayload(self, payload, destination, packetType):
-        
+    def __preparePacketsForSending(self, payload, destination, packetType):
+        packets = None
         #returns null if does not have destination node's key?
         payload = self.crypto.encryptPayload(payload, destination)
 
@@ -64,8 +70,12 @@ class Main():
         if packets:
             packets = self.network.addDataToOutgoingPackets(packets, destination)
 
-        for packet in packets:
-            self.queue.addToQue(packet)
+        if packets:
+            return packets
+        return None
+
+        # for packet in packets:
+        #     self.queue.addToQue(packet)
             # self.server.sendPacket(packet)
             # self.server.sendMsg(packet.raw, "127.0.0.1", 5124)
             # self.server.sendMsg(packet.raw, "127.0.0.1", 5100)
@@ -74,6 +84,21 @@ class Main():
         #     queue.add(packets)
 
 
+    def sendPayload(self, payload, destination, packetType):
+        packets = self.__preparePacketsForSending(payload, destination, packetType)
+        if packets:
+            for packet in packets:
+                self.queue.addToQue(packet)
+
+
+    def sendPayloadAndForget(self, payload, destination, packetType):
+        packets = self.__preparePacketsForSending(payload, destination, packetType)
+        if packets:
+            for packet in packets:
+                self.server.sendPacket(packet)
+
+    def forwardPacket(self, packet):
+        self.server.sendPacket(packet)
 
 
     

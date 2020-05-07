@@ -38,6 +38,13 @@ class Packet():
             return False
         return self.generateMd5(self.parts['payload']) == self.parts['checksum']
 
+    def splitPayload(self):
+        try:
+            self.splitted = list(reversed(self.parts['payload'].split(self.SEPARATOR)))
+        except:
+            pass
+        
+
     # def __validateChecksum(self):
     #     if not 'payload' in self.parts or not 'checksum' in self.parts or not 'hopCount' in self.parts:
     #         return False

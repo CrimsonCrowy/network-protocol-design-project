@@ -16,8 +16,10 @@ class Network():
         except Exception as e:
             return None
 
-        if packet.parts['dstNode'] == self.main.server.NODE_NAME:
-            pass
+        if packet.parts['dstNode'] != self.main.config.getMyName():
+            print('packet to be forwarded')
+            self.main.forwardPacket(packet)
+            return None
         return packet
         
 

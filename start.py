@@ -51,7 +51,12 @@ def start():
         msgFromClient = str(input("Please enter a message to the server: "))
         if msgFromClient == 'exit':
             return
-        main.sendPayload('MESSAGE|' + msgFromClient, 'tino', 'CHAT')
+        if msgFromClient == 'graph':
+            print(router.nodesState)
+            print(router.localState)
+            continue
+        destination = msgFromClient.split(' ')[0]
+        main.sendPayload('MESSAGE|' + msgFromClient, destination, 'CHAT')
         # main.sendPayload('MESSAGE|' + msgFromClient, config.getMyName(), 'CHAT')
         # server.sendMsg(msgFromClient, "127.0.0.1", port)
 
