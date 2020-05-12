@@ -17,7 +17,6 @@ class Network():
             return None
 
         if packet.parts['dstNode'] != self.main.config.getMyName():
-            print('packet to be forwarded')
             self.main.forwardPacket(packet)
             return None
         return packet

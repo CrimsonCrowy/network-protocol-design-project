@@ -4,13 +4,14 @@ from Classes.Packet import Packet
 
 class Main():
 
-    def __init__(self, router, server, network, segmenter, crypto, queue, config):
+    def __init__(self, router, server, network, segmenter, crypto, queue, config, ui):
         self.router = router
         self.server = server
         self.network = network
         self.segmenter = segmenter
         self.crypto = crypto
         self.queue = queue
+        self.ui = ui
 
         self.config = config
 
@@ -20,6 +21,7 @@ class Main():
         self.segmenter.setMain(self)
         self.crypto.setMain(self)
         self.queue.setMain(self)
+        self.ui.setMain(self)
 
         self.crypto.initialize()
         self.router.initialize()
@@ -40,15 +42,8 @@ class Main():
         if packet:
             packet = self.crypto.decryptPacket(packet)
 
-        if packet and packet.parts['packetType'] == 'ROUTING':
-            # print(packet.parts['payload'])
-            pass
-
         if packet and packet.parts['packetType'] == 'CHAT':
-            print(packet.parts['payload'])
-
-        # if segment and segment.parts.packetType == 'CHAT':
-        #     segment = segmentationLayer.handleIncomingPacket(segment)
+            self.ui.postRecievedMessage(packet)
 
         if packet and packet.parts['packetType'] == 'ROUTING':
             self.router.handleIncomingPacket(packet)

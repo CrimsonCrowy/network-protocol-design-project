@@ -19,6 +19,7 @@ class Router():
         self.server = None
         self.graph = None
         self.neighbours = {}
+        self.reachableNodes = []
         
 
     def initialize(self):
@@ -36,16 +37,23 @@ class Router():
     def __regenerateTopologyGraph(self):
         graph = {}
         graphArguments = []
+        self.reachableNodes = []
+        rNodes = {}
         for originNodeAddress, neighbours in self.nodesState.items():
             if not 'n' in neighbours: 
                 continue
             graph[originNodeAddress] = {}
             for neighbourNodeAddress, weight in neighbours['n'].items():
+                rNodes[neighbourNodeAddress] = True
                 if neighbourNodeAddress in graph and originNodeAddress in graph[neighbourNodeAddress]:
                     continue
                 graph[originNodeAddress][neighbourNodeAddress] = weight
                 graphArguments.append((originNodeAddress, neighbourNodeAddress, weight))
                 graphArguments.append((neighbourNodeAddress, originNodeAddress, weight))
+
+        rNodes.pop(self.main.config.getMyName(), None)
+        for nodeName, n in rNodes.items():
+            self.reachableNodes.append(nodeName)
 
         self.graph = Graph(graphArguments)
 

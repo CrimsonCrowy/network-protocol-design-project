@@ -1,6 +1,12 @@
 from tkinter import *
 
-class chatModule():
+class UI():
+
+    PATH_SLASH = '/'
+
+    def setMain(self, main):
+        self.main = main
+
     def __init__(self):
         #RootWindow
         self.window = Tk()
@@ -22,7 +28,7 @@ class chatModule():
         self.filePathField.pack(side=BOTTOM, fill=X)
         #Recipient field adjuster
         self.recipient = StringVar()
-        self.recipient.set("Recipient?")
+        self.recipient.set("Leave empty to send to everyone")
         self.recipientField = Entry(self.window, text=self.recipient)
         self.recipientField.pack(side=BOTTOM, fill=X)
 
@@ -30,7 +36,7 @@ class chatModule():
     #Gets absolute path and makes payload. Need to figure out how to allign a darn new input field for the File path
     def sendFile(self):
         getFilePath = self.filePathField.get()
-        getRecipient = self.recipientField.get()
+        recipient = self.recipientField.get()
 
         # For debugging use, Delete later?
         print("I got this absolute path " + getFilePath)
@@ -42,41 +48,58 @@ class chatModule():
             #Literally needs extension as well when trying to open, be careful. Not hardcoding ".txt" for versitility
             self.messages.insert(INSERT, "AdminControls: Looks like the file you just attempted to open does not exist!\n")
             print("Looks like that file did not want to open.")
-        absolutepath = getFilePath.split("\\")
+        absolutepath = getFilePath.split(self.PATH_SLASH)
         payload = payload + "FILE|" + absolutepath[len(absolutepath) - 1] + "&"
         for l in f:
             payload = payload + l
 
         #Add the function that takes care of packet sending. payload is a string, not sure where we add recipient field for packet
         # For debugging use, Delete later?
-        print(payload)
+        # print(payload)
+        self.sendPayload(payload, recipient)
         self.filePath.set("Input your file path here")
 
 
     #Function for getting user input for the chat. Immidetly posts his and sends to packetsencd function
     def onEnterPress(self, event):
-        getInput = self.inputeField.get()
-        getRecipient = self.recipientField.get()
+        inputText = self.inputeField.get()
+        recipient = self.recipientField.get()
 
-        print(getInput)
+        print(inputText)
         self.messages.insert(INSERT, "You: ")
-        self.messages.insert(INSERT, '%s\n' % getInput)
+        self.messages.insert(INSERT, '%s\n' % inputText)
         self.userInput.set('')
 
         #Does the chat make this payload too? Or is just the string needed here?
-        payload = ""
-        payload = payload + getInput
+        payload = "MESSAGE|"
+        payload = payload + inputText
 
         #For debugging use, Delete later?
-        print(payload)
+        # print(payload)
+        # print(recipient)
+        self.sendPayload(payload, recipient)
 
         return "break"
 
     #Simply appendsmessage from recieved packet? I have changed this to recieve a whole packet as an argument as I need to grab the sender as well
     def postRecievedMessage(self, packet):
-        self.messages.insert(INSERT, packet.parts['srcNode'] + ": ")
-        self.messages.insert(INSERT, packet.parts['payload'] + "\n") #Which part of the packet is a message
-        #I think I need to specify if it was direct message or brodcasted toe everyone, but still didnt tell me what part of the packet does
+        try:
+            payloadType = packet.parts['payload'].split('|')[0]
+            self.messages.insert(INSERT, packet.parts['srcNode'] + ": ")
+            if payloadType == 'MESSAGE':
+                self.messages.insert(INSERT, packet.parts['payload'][8:] + "\n")
+            else:
+                self.messages.insert(INSERT, packet.parts['payload'] + "\n")
+        except:
+            pass
+
+    def sendPayload(self, payload, recipient):
+        if recipient == '':
+            for node in self.main.router.reachableNodes:
+                self.main.sendPayload(payload, node, 'CHAT')
+        else:
+            self.main.sendPayload(payload, recipient, 'CHAT')
+        
 
     def startChat(self):
         self.frame = Frame(self.window)  # , width=300, height=300)
@@ -85,5 +108,5 @@ class chatModule():
 
         self.window.mainloop()
 
-chatBot = chatModule()
-chatBot.startChat()
+# chatBot = UI()
+# chatBot.startChat()
