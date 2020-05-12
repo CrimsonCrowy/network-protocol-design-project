@@ -12,6 +12,8 @@ class Config():
         }
 
         self.publicKeys = {
+            'marcel_server': '6a9be0efc06656cc109e441b84ac30fa5dc220613011af175f16740d65445861',
+            'marcel': '15dbfccfeb68699acacb51d8c4d13d35334d87455f06cb9481aed3d4ea711505',
             'stas': '76c0ea764d6d4efbc9b49bf0f8ba4f363731000153a914ab1c9975bcb7efde19',
             'tino': '2b8c7293c8324d6bf982a479776a2e3153262c73a8ad951f8cb495175db46e2f',
             'olaf': 'a83c347021403b2d3bbab3d804896b2eb9454ddbbab5a223def6f1b52a411b78',
@@ -39,7 +41,7 @@ class Config():
         return self.neighbours
 
     def profile_stas(self):
-        self.IP = "127.0.0.1"
+        self.IP = "192.168.0.100"
         self.port = 5111
         self.neighbours = ['tino']
         self.secretKey = '21979c5b0f8a43f9d5e5a77e1cd8d1e7c77d1c2383930096daae743c9bc469cb'
