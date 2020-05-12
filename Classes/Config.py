@@ -5,7 +5,7 @@ class Config():
         self.__nodeName = nodeName
         getattr(self, 'profile_' + nodeName)()
         self.addressList = {
-            'stas': ("127.0.0.1", 5111),
+            'stas': ("192.168.0.100", 5111),
             'tino': ("127.0.0.1", 5112),
             'olaf': ("127.0.0.1", 5113),
             'furkan': ("127.0.0.1", 5114),
