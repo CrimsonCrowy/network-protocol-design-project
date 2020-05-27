@@ -1,0 +1,27 @@
+Authors: Stanislav Mekinulashvili, Tino Apostolovski
+
+run: pip3 install -r requirements
+
+pip for some reason does not allways install libnacl correctly on mac, so you might have to download missing file manually:
+https://github.com/naphaso/jsodium/blob/master/native/lib/libsodium.dylib
+
+Put it in this directory:
+/Library/Frameworks/Python.framework/Versions/3.7/lib/libsodium.dylib
+
+If path is different on your machine, grab relevant path from error message and put downloaded file there next to other .dylib files.
+
+Usage:
+When running the programm, you are asked for node name.
+Node is configured by adding method in Classes/Config.py:
+
+def profile_{{nodeName}}(self):
+    self.IP = "192.168.0.100"
+    self.port = 5111
+    self.neighbours = ['tino', 'marcel_server']
+    self.secretKey = '21979c5b0f8a43f9d5e5a77e1cd8d1e7c77d1c2383930096daae743c9bc469cb'
+
+Also appropriate values should be added to self.publicKeys and self.addressList
+
+Encryption keys can be generated with generate_libnacl_keypair.py
+
+In the chat window top text input box is for destination node's name, second is for pasting file's full path that you want to send and third one is for message text. Leave first input box empty to send message to everyone.
