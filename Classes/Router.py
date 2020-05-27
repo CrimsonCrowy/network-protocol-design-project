@@ -55,6 +55,10 @@ class Router():
         for nodeName, n in rNodes.items():
             self.reachableNodes.append(nodeName)
 
+        for neighbour in self.main.config.getMyNeighbours():
+            if self.neighbours[neighbour]['isOnline'] and not neighbour in self.reachableNodes:
+                self.reachableNodes.append(neighbour)
+
         self.graph = Graph(graphArguments)
 
 
